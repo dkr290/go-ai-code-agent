@@ -37,7 +37,7 @@ func NewOpenAI(ctx context.Context, apiKey string, httpClient *http.Client) *Ope
 	}
 }
 
-func (o *OpenAI) Query(systemPrompt, userPrompt string) (LLMQueryResponse, error) {
+func (o *OpenAI) Query(systemPrompt, userPrompt string) (OpenAIResponse, error) {
 	if systemPrompt == "" {
 		systemPrompt = "You are helpful assistant."
 	}
@@ -57,12 +57,12 @@ func (o *OpenAI) Query(systemPrompt, userPrompt string) (LLMQueryResponse, error
 	// Marshal the body
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return nil, fmt.Errorf("error marshalling the payload %v", err)
+		return OpenAIResponse{}, fmt.Errorf("error marshalling the payload %v", err)
 	}
 
 	req, err := http.NewRequestWithContext(o.ctx, "POST", OpenAIEndpoint, bytes.NewBuffer(body))
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
+		return OpenAIResponse{}, fmt.Errorf("error creating request: %v", err)
 	}
 
 	req.Header.Add("Content-Type", "application/json")

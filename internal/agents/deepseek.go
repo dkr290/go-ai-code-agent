@@ -35,7 +35,7 @@ func NewDeepSeek(ctx context.Context, apiKey string, httpClient *http.Client) *D
 	}
 }
 
-func (o *DeepSeek) Query(systemPrompt, userPrompt string) (LLMQueryResponse, error) {
+func (o *DeepSeek) Query(systemPrompt, userPrompt string) (DeepSeekResponse, error) {
 	if systemPrompt == "" {
 		systemPrompt = "You are helpful assistant."
 	}
@@ -56,12 +56,12 @@ func (o *DeepSeek) Query(systemPrompt, userPrompt string) (LLMQueryResponse, err
 	// Marshal the body
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return nil, fmt.Errorf("error marshalling the payload %v", err)
+		return DeepSeekResponse{}, fmt.Errorf("error marshalling the payload %v", err)
 	}
 
 	req, err := http.NewRequestWithContext(o.ctx, "POST", DeepSeekEndpoint, bytes.NewBuffer(body))
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
+		return DeepSeekResponse{}, fmt.Errorf("error creating request: %v", err)
 	}
 
 	req.Header.Add("Content-Type", "application/json")
@@ -71,21 +71,21 @@ func (o *DeepSeek) Query(systemPrompt, userPrompt string) (LLMQueryResponse, err
 	// Do the request
 	resp, err := o.httpClient.Do(req)
 	if err != nil {
-		return OpenAIResponse{}, err
+		return DeepSeekResponse{}, err
 	}
 	defer resp.Body.Close()
 
 	// Decode the response
 	var DeepSeekResp DeepSeekResponse
 	if err := json.NewDecoder(resp.Body).Decode(&DeepSeekResp); err != nil {
-		return nil, fmt.Errorf("error unmarshalling response: %v", err)
+		return DeepSeekResponse{}, fmt.Errorf("error unmarshalling response: %v", err)
 	}
 
 	if DeepSeekResp.Error != nil {
-		return nil, fmt.Errorf("API error %v", err)
+		return DeepSeekResponse{}, fmt.Errorf("API error %v", err)
 	}
 	if len(DeepSeekResp.Choices) == 0 {
-		return nil, errors.New("no choices returned from API")
+		return DeepSeekResponse{}, errors.New("no choices returned from API")
 	}
 	return DeepSeekResp, nil
 }

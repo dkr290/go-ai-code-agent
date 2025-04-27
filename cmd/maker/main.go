@@ -20,6 +20,11 @@ func main() {
 		fmt.Println("NEED DEEPSEEK_API_KEY env var")
 		return
 	}
+	gkey := os.Getenv("GEMINI_API_KEY")
+	if len(gkey) == 0 {
+		fmt.Println("NEED GEMINI_API_KEY env var")
+		return
+	}
 
 	ctx := context.Background()
 
@@ -42,4 +47,13 @@ func main() {
 	}
 	fmt.Println("DeepSeek Response below here is there ")
 	fmt.Printf("\n\n%+v\n\n", d_resp)
+
+	geminiPrompt := "Write simple todo program in python"
+	geminiClient := agents.NewGemini(ctx, gkey)
+	gemini_resp, err := geminiClient.QueryGemini("", geminiPrompt)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Gemini Response below here is there ")
+	fmt.Printf("\n\n%+v\n\n", gemini_resp)
 }
