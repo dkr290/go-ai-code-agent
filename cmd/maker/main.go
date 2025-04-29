@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 
@@ -9,51 +10,64 @@ import (
 )
 
 func main() {
-	okey := os.Getenv("OPENAI_API_KEY")
-	if len(okey) == 0 {
-		fmt.Println("NEED OPENAI_API_KEY env var")
-		return
-	}
+	openaiKey := flag.String("openai-key", "", "OpenAi API key")
+	deepSeekKey := flag.String("deepseek-key", "", "DeepSeek API key")
+	geminiKey := flag.String("gemini-key", "", "Gemini API key")
+	useLLM := flag.String("use-llm", "openai", "LLM to use (openai, deepseek, gemini)")
+	outputDir := flag.String("output-dir", "./output", "Output directory for generated files")
+	basePackage := flag.String(
+		"base-package",
+		"github.com/user/package",
+		"Base package for generated files",
+	)
+	workerCount := flag.Int("worker-count", 4, "Number of workers to use for file generation")
+	flag.Parse()
 
-	dkey := os.Getenv("DEEPSEEK_API_KEY")
-	if len(dkey) == 0 {
-		fmt.Println("NEED DEEPSEEK_API_KEY env var")
-		return
-	}
-	gkey := os.Getenv("GEMINI_API_KEY")
-	if len(gkey) == 0 {
-		fmt.Println("NEED GEMINI_API_KEY env var")
+	if useLLM == nil {
+		fmt.Println("NEED use-llm flag")
 		return
 	}
 
 	ctx := context.Background()
 
-	prompt := "Write simnple todo program in go"
+	if *useLLM == "openai" {
+		if *openaiKey == "" {
+			*openaiKey = os.Getenv("OPENAI_API_KEY")
+			if *openaiKey == "" {
+				fmt.Println(
+					"NEED OPENAI_API_KEY env var or to be passed as command line arg -openai-key",
+				)
+				return
+			}
+		}
 
-	openaiClient := agents.NewOpenAI(ctx, okey, nil)
-	resp, err := openaiClient.Query("", prompt)
-	if err != nil {
-		panic(err)
+		openaiClient := agents.NewOpenAI(ctx, *openaiKey, nil)
+		agents.NewAgent(ctx, openaiClient, nil, nil, *outputDir, *basePackage, *workerCount)
 	}
-	fmt.Println("Openai Reponce")
-	fmt.Printf("\n\n%+v\n\n", resp)
-
-	deepSeekPrompt := "Write simnple todo program in nodejs"
-
-	deepSeekClient := agents.NewDeepSeek(ctx, dkey, nil)
-	d_resp, err := deepSeekClient.Query("", deepSeekPrompt)
-	if err != nil {
-		panic(err)
+	if *useLLM == "deepseek" {
+		if *deepSeekKey == "" {
+			*deepSeekKey = os.Getenv("DEEPSEEK_API_KEY")
+			if *deepSeekKey == "" {
+				fmt.Println(
+					"NEED DEEPSEEK_API_KEY env var or to be passed as command line arg -deepseek-key",
+				)
+				return
+			}
+		}
+		deepSeekClient := agents.NewDeepSeek(ctx, *deepSeekKey, nil)
+		agents.NewAgent(ctx, nil, deepSeekClient, nil, *outputDir, *basePackage, *workerCount)
 	}
-	fmt.Println("DeepSeek Response below here is there ")
-	fmt.Printf("\n\n%+v\n\n", d_resp)
-
-	geminiPrompt := "Write simple todo program in python"
-	geminiClient := agents.NewGemini(ctx, gkey)
-	gemini_resp, err := geminiClient.QueryGemini("", geminiPrompt)
-	if err != nil {
-		panic(err)
+	if *useLLM == "gemini" {
+		if *geminiKey == "" {
+			*geminiKey = os.Getenv("GEMINI_API_KEY")
+			if *geminiKey == "" {
+				fmt.Println(
+					"NEED GEMINI_API_KEY env var or to be passed as command line arg -gemini-key",
+				)
+				return
+			}
+		}
+		geminiClient := agents.NewGemini(ctx, *geminiKey)
+		agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage, *workerCount)
 	}
-	fmt.Println("Gemini Response below here is there ")
-	fmt.Printf("\n\n%+v\n\n", gemini_resp)
 }
