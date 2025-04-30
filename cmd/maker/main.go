@@ -42,7 +42,9 @@ func main() {
 		}
 
 		openaiClient := agents.NewOpenAI(ctx, *openaiKey, nil)
-		agents.NewAgent(ctx, openaiClient, nil, nil, *outputDir, *basePackage, *workerCount)
+		a := agents.NewAgent(ctx, openaiClient, nil, nil, *outputDir, *basePackage, *workerCount)
+		a.Start()
+
 	}
 	if *useLLM == "deepseek" {
 		if *deepSeekKey == "" {
@@ -55,7 +57,8 @@ func main() {
 			}
 		}
 		deepSeekClient := agents.NewDeepSeek(ctx, *deepSeekKey, nil)
-		agents.NewAgent(ctx, nil, deepSeekClient, nil, *outputDir, *basePackage, *workerCount)
+		a := agents.NewAgent(ctx, nil, deepSeekClient, nil, *outputDir, *basePackage, *workerCount)
+		a.Start()
 	}
 	if *useLLM == "gemini" {
 		if *geminiKey == "" {
