@@ -18,7 +18,6 @@ var (
 	useLLM      *string
 	outputDir   *string
 	basePackage *string
-	workerCount *int
 )
 
 func main() {
@@ -32,7 +31,6 @@ func main() {
 		"github.com/user/package",
 		"Base package for generated files",
 	)
-	workerCount = flag.Int("worker-count", 4, "Number of workers to use for file generation")
 	flag.Parse()
 
 	if useLLM == nil {
@@ -62,8 +60,8 @@ func run(ctx context.Context, isType string) error {
 			}
 		}
 		deepSeekClient := agents.NewDeepSeek(ctx, *deepSeekKey, nil)
-		a := agents.NewAgent(ctx, nil, deepSeekClient, nil, *outputDir, *basePackage, *workerCount)
-		a.Start()
+		a := agents.NewAgent(ctx, nil, deepSeekClient, nil, *outputDir, *basePackage)
+		runAgent(a)
 
 	case "openai":
 		if *openaiKey == "" {
@@ -76,8 +74,8 @@ func run(ctx context.Context, isType string) error {
 		}
 
 		openaiClient := agents.NewOpenAI(ctx, *openaiKey, nil)
-		a := agents.NewAgent(ctx, openaiClient, nil, nil, *outputDir, *basePackage, *workerCount)
-		a.Start()
+		a := agents.NewAgent(ctx, openaiClient, nil, nil, *outputDir, *basePackage)
+		runAgent(a)
 
 	case "gemini":
 		if *geminiKey == "" {
@@ -89,12 +87,26 @@ func run(ctx context.Context, isType string) error {
 			}
 		}
 		geminiClient := agents.NewGemini(ctx, *geminiKey)
-		a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage, *workerCount)
-		a.Start()
+		a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
+		runAgent(a)
 
 	default:
 		return errors.New("wrong option only deepseek, openai and gemini accepted")
 	}
 
 	return nil
+}
+
+func runAgent(a *agents.Agent) {
+	a.WriteFile(
+		"main.go",
+		"package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tfmt.Println(\"Hello World.\")\n}\n",
+	)
+	go func() {
+		for err := range a.GetErrorChan() {
+			fmt.Printf("Error: %v\n", err)
+		}
+	}()
+	a.Wait()
+	log.Println("Finished writing to the output directory", *outputDir)
 }
