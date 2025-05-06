@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/dkr290/go-ai-code-agent/internal/agents"
+	"github.com/dkr290/go-ai-code-agent/internal/utils"
 )
 
 var (
@@ -87,8 +88,14 @@ func run(ctx context.Context, isType string) error {
 			}
 		}
 		geminiClient := agents.NewGemini(ctx, *geminiKey)
-		a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
-		runAgent(a)
+		resp, err := geminiClient.QueryGemini(utils.GetSystemPrompt(), "create todo app")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("\n\n%+v\n", resp)
+
+		// a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
+		// runAgent(a)
 
 	default:
 		return errors.New("wrong option only deepseek, openai and gemini accepted")

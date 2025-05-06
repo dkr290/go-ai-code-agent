@@ -51,8 +51,6 @@ func (g *GeminiApi) QueryGemini(systemPrompt, userPrompt string) (string, error)
 		return "", fmt.Errorf("error generate context %v", err)
 	}
 
-	fmt.Println(result.Text())
-
 	// Decode the response
 	return result.Text(), nil
 }
