@@ -19,6 +19,7 @@ var (
 	useLLM      *string
 	outputDir   *string
 	basePackage *string
+	language    *string
 )
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
 		"github.com/user/package",
 		"Base package for generated files",
 	)
+	language = flag.String("use-language", "go", " use supported language like go,python or java")
 	flag.Parse()
 
 	if useLLM == nil {
@@ -87,12 +89,15 @@ func run(ctx context.Context, isType string) error {
 				)
 			}
 		}
-		geminiClient := agents.NewGemini(ctx, *geminiKey)
-		resp, err := geminiClient.QueryGemini(utils.GetSystemPrompt(), "create todo app")
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("\n\n%+v\n", resp)
+		// geminiClient := agents.NewGemini(ctx, *geminiKey)
+		test := utils.GetSystemPrompt(*language, *basePackage, "generate todo app")
+
+		log.Println(test)
+		// resp, err := geminiClient.QueryGemini(utils.GetSystemPrompt(), "create todo app")
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// fmt.Printf("\n\n%+v\n", resp)
 
 		// a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
 		// runAgent(a)
