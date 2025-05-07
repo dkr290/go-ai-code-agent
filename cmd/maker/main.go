@@ -89,15 +89,17 @@ func run(ctx context.Context, isType string) error {
 				)
 			}
 		}
-		// geminiClient := agents.NewGemini(ctx, *geminiKey)
-		test := utils.GetSystemPrompt(*language, *basePackage, "generate todo app")
+		geminiClient := agents.NewGemini(ctx, *geminiKey)
+		prompt, err := utils.GetSystemPrompt(*language, *basePackage, "")
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		log.Println(test)
-		// resp, err := geminiClient.QueryGemini(utils.GetSystemPrompt(), "create todo app")
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
-		// fmt.Printf("\n\n%+v\n", resp)
+		resp, err := geminiClient.QueryGemini(prompt, "create todo app")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("\n\n%+v\n", resp)
 
 		// a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
 		// runAgent(a)
