@@ -67,7 +67,7 @@ func (a *Agent) WriteFile(path string, content string) {
 	}()
 }
 
-func (a *Agent) Wait() {
+func (a *Agent) Close() {
 	a.wg.Wait()
 	close(a.errorChan)
 }

@@ -34,6 +34,7 @@ func main() {
 		"Base package for generated files",
 	)
 	language = flag.String("use-language", "go", " use supported language like go,python or java")
+
 	flag.Parse()
 
 	if useLLM == nil {
@@ -64,7 +65,7 @@ func run(ctx context.Context, isType string) error {
 		}
 		deepSeekClient := agents.NewDeepSeek(ctx, *deepSeekKey, nil)
 		a := agents.NewAgent(ctx, nil, deepSeekClient, nil, *outputDir, *basePackage)
-		runAgent(a)
+		runAgent(a, nil)
 
 	case "openai":
 		if *openaiKey == "" {
@@ -78,7 +79,7 @@ func run(ctx context.Context, isType string) error {
 
 		openaiClient := agents.NewOpenAI(ctx, *openaiKey, nil)
 		a := agents.NewAgent(ctx, openaiClient, nil, nil, *outputDir, *basePackage)
-		runAgent(a)
+		runAgent(a, nil)
 
 	case "gemini":
 		if *geminiKey == "" {
@@ -90,7 +91,14 @@ func run(ctx context.Context, isType string) error {
 			}
 		}
 		geminiClient := agents.NewGemini(ctx, *geminiKey)
-		prompt, err := utils.GetSystemPrompt(*language, *basePackage, "")
+		prompt, err := utils.GetSystemPrompt(
+			*language,
+			*basePackage,
+			`Use Gin as the base framework\n
+       - Clean project structure following Go conventions\n
+       - Configuration management using dotenv\n
+       - Proper error handling\n- Logging`,
+		)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -99,10 +107,13 @@ func run(ctx context.Context, isType string) error {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("\n\n%+v\n", resp)
+		fileparse, err := utils.ParseCode(resp)
+		if err != nil {
+			log.Fatal("error parsing code", err)
+		}
 
-		// a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
-		// runAgent(a)
+		a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
+		runAgent(a, fileparse)
 
 	default:
 		return errors.New("wrong option only deepseek, openai and gemini accepted")
@@ -111,16 +122,19 @@ func run(ctx context.Context, isType string) error {
 	return nil
 }
 
-func runAgent(a *agents.Agent) {
-	a.WriteFile(
-		"main.go",
-		"package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tfmt.Println(\"Hello World.\")\n}\n",
-	)
+func runAgent(a *agents.Agent, fileparse []utils.FileParser) {
 	go func() {
 		for err := range a.GetErrorChan() {
 			fmt.Printf("Error: %v\n", err)
 		}
 	}()
-	a.Wait()
+
+	for _, file := range fileparse {
+		a.WriteFile(
+			file.Path,
+			file.Content,
+		)
+	}
+	a.Close()
 	log.Println("Finished writing to the output directory", *outputDir)
 }
