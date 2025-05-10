@@ -1,5 +1,5 @@
 {
   "name": "go-gin",
   "language": "go",
-  "prompt": "- Use Gin as the base framework\n- Clean project structure following Go conventions\n- Configuration management using dotenv\n- Proper error handling\n- Logging"
+  "prompt": "- Use Gin as the base framework\n- Clean project structure following Go conventions\n- Configuration management using dotenv\n- Proper error handling\n- Logging\n- Docker file"
 }
