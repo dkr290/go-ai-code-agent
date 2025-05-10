@@ -2,11 +2,16 @@ package agents
 
 import (
 	"context"
+	"embed"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 )
+
+//go:embed templates/*
+var templateFiles embed.FS
 
 type Agent struct {
 	openAI       *OpenAI
@@ -74,4 +79,40 @@ func (a *Agent) Close() {
 
 func (a *Agent) GetErrorChan() chan error {
 	return a.errorChan
+}
+
+func (a *Agent) LoadTemplatesFromFolder() (TemplateConfigs, error) {
+	templates := make(TemplateConfigs)
+	entries, err := templateFiles.ReadDir(
+		"templates",
+	) // Read the contents of the embedded "templates" directory
+	if err != nil {
+		return nil, fmt.Errorf("error reading embedded templates directory: %w", err)
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() && filepath.Ext(entry.Name()) == ".json" {
+			filePath := filepath.Join(
+				"templates",
+				entry.Name(),
+			) // Construct the full path within the embedded FS
+			content, err := templateFiles.ReadFile(filePath)
+			if err != nil {
+				fmt.Printf("error reading embedded file '%s': %v\n", filePath, err)
+				continue // Continue to the next file
+			}
+
+			var config TemplateConfig
+			err = json.Unmarshal(content, &config)
+			if err != nil {
+				fmt.Printf("error unmarshalling JSON from embedded file '%s': %v\n", filePath, err)
+				continue // Continue to the next file
+			}
+
+			nameWithoutExt := entry.Name()[:len(entry.Name())-len(filepath.Ext(entry.Name()))]
+			templates[nameWithoutExt] = config
+		}
+	}
+
+	return templates, nil
 }

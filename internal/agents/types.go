@@ -48,3 +48,12 @@ type DeepSeekPayload struct {
 	Messages []DeepSeekMessage `json:"messages"`
 	Model    string            `json:"model"`
 }
+
+type TemplateConfig struct {
+	Name     string `json:"name"`
+	Language string `json:"language"`
+	Prompt   string `json:"prompt"`
+}
+
+// TemplateConfigs is a slice to hold a collection of TemplateConfig.
+type TemplateConfigs map[string]TemplateConfig

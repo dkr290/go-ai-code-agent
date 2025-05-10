@@ -20,6 +20,8 @@ var (
 	outputDir   *string
 	basePackage *string
 	language    *string
+	addTemplate *string
+	userPrompt  *string
 )
 
 func main() {
@@ -34,6 +36,16 @@ func main() {
 		"Base package for generated files",
 	)
 	language = flag.String("use-language", "go", " use supported language like go,python or java")
+	addTemplate = flag.String(
+		"use-template",
+		"",
+		"supported template for additional instructions - java-spring, go-gin",
+	)
+	userPrompt = flag.String(
+		"user-prompt",
+		"sample todo app",
+		"User prompt for the application to create",
+	)
 
 	flag.Parse()
 
@@ -90,20 +102,31 @@ func run(ctx context.Context, isType string) error {
 				)
 			}
 		}
+
 		geminiClient := agents.NewGemini(ctx, *geminiKey)
+		a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
+
+		templ, err := a.LoadTemplatesFromFolder()
+		if err != nil {
+			log.Fatal(err)
+		}
+		var p string
+		for _, t := range templ {
+			if *language == t.Language && *addTemplate == t.Name {
+				p = t.Prompt
+			}
+		}
+
 		prompt, err := utils.GetSystemPrompt(
 			*language,
 			*basePackage,
-			`Use Gin as the base framework\n
-       - Clean project structure following Go conventions\n
-       - Configuration management using dotenv\n
-       - Proper error handling\n- Logging`,
+			p,
 		)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		resp, err := geminiClient.QueryGemini(prompt, "create todo app")
+		resp, err := geminiClient.QueryGemini(prompt, *userPrompt)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -112,7 +135,6 @@ func run(ctx context.Context, isType string) error {
 			log.Fatal("error parsing code", err)
 		}
 
-		a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
 		runAgent(a, fileparse)
 
 	default:
