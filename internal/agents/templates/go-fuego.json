@@ -1,0 +1,5 @@
+{
+  "name": "go-fuego",
+  "language": "go",
+  "prompt": "- Use go-fuego as the base framework\n- Clean project structure following Go conventions\n- Configuration management using dotenv\n- Proper error handling\n- Logging"
+}
