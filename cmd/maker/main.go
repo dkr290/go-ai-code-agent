@@ -77,7 +77,19 @@ func run(ctx context.Context, isType string) error {
 		}
 		deepSeekClient := agents.NewDeepSeek(ctx, *deepSeekKey, nil)
 		a := agents.NewAgent(ctx, nil, deepSeekClient, nil, *outputDir, *basePackage)
-		runAgent(a, nil)
+		prompt, err := getPrompt(a)
+		if err != nil {
+			log.Fatal(err)
+		}
+		resp, err := deepSeekClient.Query(prompt, *userPrompt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fileParse, err := utils.ParseCode(resp.Choices[0].Message.Content)
+		if err != nil {
+			log.Fatal("error parsing code", err)
+		}
+		runAgent(a, fileParse)
 
 	case "openai":
 		if *openaiKey == "" {
@@ -91,7 +103,19 @@ func run(ctx context.Context, isType string) error {
 
 		openaiClient := agents.NewOpenAI(ctx, *openaiKey, nil)
 		a := agents.NewAgent(ctx, openaiClient, nil, nil, *outputDir, *basePackage)
-		runAgent(a, nil)
+		prompt, err := getPrompt(a)
+		if err != nil {
+			log.Fatal(err)
+		}
+		resp, err := openaiClient.Query(prompt, *userPrompt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fileParse, err := utils.ParseCode(resp.Choices[0].Message.Content)
+		if err != nil {
+			log.Fatal("error parsing code", err)
+		}
+		runAgent(a, fileParse)
 
 	case "gemini":
 		if *geminiKey == "" {
@@ -106,22 +130,7 @@ func run(ctx context.Context, isType string) error {
 		geminiClient := agents.NewGemini(ctx, *geminiKey)
 		a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
 
-		templ, err := a.LoadTemplatesFromFolder()
-		if err != nil {
-			log.Fatal(err)
-		}
-		var p string
-		for _, t := range templ {
-			if *language == t.Language && *addTemplate == t.Name {
-				p = t.Prompt
-			}
-		}
-
-		prompt, err := utils.GetSystemPrompt(
-			*language,
-			*basePackage,
-			p,
-		)
+		prompt, err := getPrompt(a)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -159,4 +168,28 @@ func runAgent(a *agents.Agent, fileparse []utils.FileParser) {
 	}
 	a.Close()
 	log.Println("Finished writing to the output directory", *outputDir)
+}
+
+func getPrompt(a *agents.Agent) (string, error) {
+	templ, err := a.LoadTemplatesFromFolder()
+	if err != nil {
+		return "", err
+	}
+	var p string
+	for _, t := range templ {
+		if *language == t.Language && *addTemplate == t.Name {
+			p = t.Prompt
+		}
+	}
+
+	prompt, err := utils.GetSystemPrompt(
+		*language,
+		*basePackage,
+		p,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return prompt, nil
 }

@@ -24,7 +24,7 @@ type DeepSeek struct {
 func NewDeepSeek(ctx context.Context, apiKey string, httpClient *http.Client) *DeepSeek {
 	if httpClient == nil {
 		httpClient = &http.Client{
-			Timeout: time.Second * 120,
+			Timeout: time.Second * 240,
 		}
 	}
 
