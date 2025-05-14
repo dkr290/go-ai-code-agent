@@ -1,0 +1,5 @@
+{
+  "name": "net-http",
+  "language": "go",
+  "prompt": "- Use net/http package\n- Clean project structure following Go conventions\n- Configuration management using dotenv\n- Proper error handling\n- Logging\n- Docker file"
+}
