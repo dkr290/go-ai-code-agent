@@ -8,6 +8,7 @@ import (
 
 	"github.com/dkr290/go-ai-code-agent/internal/handlers"
 	"github.com/dkr290/go-ai-code-agent/internal/templates"
+	"github.com/dkr290/go-ai-code-agent/internal/utils"
 )
 
 func main() {
@@ -16,12 +17,12 @@ func main() {
 		log.Fatalf("Error loading templates: %v", err)
 	}
 
-	// Create HTTP handlers
 	appHandler := handlers.NewAppHandler(tmpl)
-	// Create a new ServeMux
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", appHandler.IndexHandler)          // For index.html
-	mux.HandleFunc("/agent", appHandler.CallAgentHandler) // Endpoint to call the AI agent
+	mux.HandleFunc("/", utils.MakeHandlers(appHandler.IndexHandler)) // For index.html
+	mux.HandleFunc(
+		"/agent",
+		utils.MakeHandlers(appHandler.CallAgentHandler)) // call the actual ai stuff
 
 	// Serve static files
 	fs := http.FileServer(http.Dir("web/static"))
