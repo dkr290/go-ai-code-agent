@@ -22,6 +22,7 @@ var (
 	language    *string
 	addTemplate *string
 	userPrompt  *string
+	modelName   *string
 )
 
 func main() {
@@ -46,6 +47,7 @@ func main() {
 		"sample todo app",
 		"User prompt for the application to create",
 	)
+	modelName = flag.String("model", "", "Use the model depending opn the LLM usage")
 
 	flag.Parse()
 
@@ -53,7 +55,23 @@ func main() {
 		fmt.Println("NEED use-llm flag")
 		return
 	}
-
+	if *modelName == "" {
+		fmt.Println("Need supported model name per llm")
+		fmt.Println(`
+        ChatGPT:
+          "gpt-4o-mini"
+          "gpt-4o"
+          "gpt-4.1-mini"
+          "gpt-4.1"
+        Deepseek:
+          "deepseek-chat"
+          "deepseek-reasoner"
+        Gemini: [
+          "gemini-2.0-flash", label: "Gemini 2.0 flash"
+          "gemini-2.5-pro-preview-05-06"
+          "gemini-2.5-flash-preview-04-17"`)
+		return
+	}
 	ctx := context.Background()
 
 	err := run(ctx, *useLLM)
@@ -75,7 +93,7 @@ func run(ctx context.Context, isType string) error {
 				)
 			}
 		}
-		deepSeekClient := agents.NewDeepSeek(ctx, *deepSeekKey, nil)
+		deepSeekClient := agents.NewDeepSeek(ctx, *deepSeekKey, nil, *modelName)
 		a := agents.NewAgent(ctx, nil, deepSeekClient, nil, *outputDir, *basePackage)
 		prompt, err := getPrompt(a)
 		if err != nil {
@@ -101,7 +119,7 @@ func run(ctx context.Context, isType string) error {
 			}
 		}
 
-		openaiClient := agents.NewOpenAI(ctx, *openaiKey, nil)
+		openaiClient := agents.NewOpenAI(ctx, *openaiKey, nil, *modelName)
 		a := agents.NewAgent(ctx, openaiClient, nil, nil, *outputDir, *basePackage)
 		prompt, err := getPrompt(a)
 		if err != nil {
@@ -127,7 +145,7 @@ func run(ctx context.Context, isType string) error {
 			}
 		}
 
-		geminiClient := agents.NewGemini(ctx, *geminiKey)
+		geminiClient := agents.NewGemini(ctx, *geminiKey, *modelName)
 		a := agents.NewAgent(ctx, nil, nil, geminiClient, *outputDir, *basePackage)
 
 		prompt, err := getPrompt(a)

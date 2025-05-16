@@ -22,7 +22,8 @@ func run(ctx context.Context, params *Params) error {
 				)
 			}
 		}
-		deepSeekClient := agents.NewDeepSeek(ctx, params.deepSeekKey, nil)
+
+		deepSeekClient := agents.NewDeepSeek(ctx, params.deepSeekKey, nil, params.modelName)
 		a := agents.NewAgent(ctx, nil, deepSeekClient, nil, params.outputDir, params.basePackage)
 		prompt, err := getPrompt(a, params)
 		if err != nil {
@@ -48,7 +49,7 @@ func run(ctx context.Context, params *Params) error {
 			}
 		}
 
-		openaiClient := agents.NewOpenAI(ctx, params.openaiKey, nil)
+		openaiClient := agents.NewOpenAI(ctx, params.openaiKey, nil, params.modelName)
 		a := agents.NewAgent(ctx, openaiClient, nil, nil, params.outputDir, params.basePackage)
 		prompt, err := getPrompt(a, params)
 		if err != nil {
@@ -73,8 +74,7 @@ func run(ctx context.Context, params *Params) error {
 				)
 			}
 		}
-
-		geminiClient := agents.NewGemini(ctx, params.geminiKey)
+		geminiClient := agents.NewGemini(ctx, params.geminiKey, params.modelName)
 		a := agents.NewAgent(ctx, nil, nil, geminiClient, params.outputDir, params.basePackage)
 
 		prompt, err := getPrompt(a, params)

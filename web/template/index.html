@@ -116,7 +116,10 @@
       </div>
     </nav>
 
-    <div class="container mt-4">
+
+
+    <form id="aiForm" action="/agent" method="post">
+     <div class="container mt-4">
       <div id="modelDropdownContainer">
         <div class="mb-3">
           <label for="model" class="form-label">Model:</label>
@@ -126,7 +129,6 @@
         </div>
       </div>
 
-      <form id="aiForm" action="/call_agent" method="post">
         <div class="mb-3">
           <label for="use-llm-hidden" class="form-label">Selected LLM:</label>
           <input
@@ -177,7 +179,9 @@
           <select class="form-select" id="use-template" name="use-template">
             <option value="">None</option>
             <option value="go-gin">go-gin</option>
+            <option value="go-fuego">go-fuego</option>
             <option value="java-spring">java-spring</option>
+            <option value="go-http">go-http</option>
           </select>
         </div>
         <div class="mb-3">
@@ -213,17 +217,25 @@ sample todo app</textarea
       // 1) Map of LLM → models
       const llmModels = {
         openai: [
-          { value: "gpt-4", label: "GPT-4" },
+          { value: "gpt-4o-mini", label: "GPT-4 mini" },
           { value: "gpt-4o", label: "GPT-4o" },
-          { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
+          { value: "gpt-4.1-mini", label: "GPT-4.1 mini" },
+          { value: "gpt-4.1", label: "GPT-4.1" },
         ],
         deepseek: [
-          { value: "ds-alpha", label: "DS-Alpha" },
-          { value: "ds-beta", label: "DS-Beta" },
+          { value: "deepseek-chat", label: "deepseek-chat" },
+          { value: "deepseek-reasoner", label: "deepseek-reasoner" },
         ],
         gemini: [
-          { value: "gemini-pro", label: "Gemini Pro" },
-          { value: "gemini-ultra", label: "Gemini Ultra" },
+          { value: "gemini-2.0-flash", label: "Gemini 2.0 flash" },
+          {
+            value: "gemini-2.5-pro-preview-05-06",
+            label: "Gemini 2.5 Pro Preview",
+          },
+          {
+            value: "gemini-2.5-flash-preview-04-17",
+            label: "Gemini Fash 2.5 Preview",
+          },
         ],
       };
 

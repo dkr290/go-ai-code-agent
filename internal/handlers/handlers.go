@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -19,6 +18,7 @@ type Params struct {
 	language    string
 	addTemplate string
 	userPrompt  string
+	modelName   string
 }
 
 // AppHandler struct holds dependencies for HTTP handlers
@@ -38,10 +38,10 @@ func (h *AppHandler) IndexHandler(w http.ResponseWriter, r *http.Request) error 
 	if r.Method == http.MethodGet {
 		err := h.templates.ExecuteTemplate(w, "index.html", nil) // You might pass data here
 		if err != nil {
-			return err
+			return fmt.Errorf("erro partsing templates %v", err)
 		}
 	}
-	return errors.New("method not allowed")
+	return nil
 }
 
 func (h *AppHandler) CallAgentHandler(w http.ResponseWriter, r *http.Request) error {
@@ -51,7 +51,7 @@ func (h *AppHandler) CallAgentHandler(w http.ResponseWriter, r *http.Request) er
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			return errors.New("error parsing form")
+			return fmt.Errorf("error parsing form %v", err)
 		}
 
 		// Extract all the parameters from the form
@@ -65,11 +65,12 @@ func (h *AppHandler) CallAgentHandler(w http.ResponseWriter, r *http.Request) er
 			language:    r.FormValue("use-language"),
 			addTemplate: r.FormValue("use-template"),
 			userPrompt:  r.FormValue("user-prompt"),
+			modelName:   r.FormValue("model"),
 		}
 
 		// Call the AI agent with all the parameters
 		if err := run(ctx, &params); err != nil {
-			return errors.New("error calling AI agent")
+			return fmt.Errorf("error calling AI agent %s", err)
 		}
 
 		// For this example, we'll just send the AI response back as plain text
@@ -77,5 +78,5 @@ func (h *AppHandler) CallAgentHandler(w http.ResponseWriter, r *http.Request) er
 		_, _ = fmt.Fprintf(w, "%s", "OK")
 		return nil
 	}
-	return errors.New("method not allowed")
+	return fmt.Errorf("method not allowed")
 }

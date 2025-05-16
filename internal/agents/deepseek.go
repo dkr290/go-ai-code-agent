@@ -11,17 +11,22 @@ import (
 )
 
 const (
-	DeepSeekEndpoint  = "https://api.deepseek.com/chat/completions"
-	DeepSeekModelName = "deepseek-reasoner"
+	DeepSeekEndpoint = "https://api.deepseek.com/chat/completions"
 )
 
 type DeepSeek struct {
 	httpClient *http.Client
 	ctx        context.Context
 	apiKey     string
+	modelName  string
 }
 
-func NewDeepSeek(ctx context.Context, apiKey string, httpClient *http.Client) *DeepSeek {
+func NewDeepSeek(
+	ctx context.Context,
+	apiKey string,
+	httpClient *http.Client,
+	modelName string,
+) *DeepSeek {
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: time.Second * 240,
@@ -32,6 +37,7 @@ func NewDeepSeek(ctx context.Context, apiKey string, httpClient *http.Client) *D
 		ctx:        ctx,
 		apiKey:     apiKey,
 		httpClient: httpClient,
+		modelName:  modelName,
 	}
 }
 
@@ -51,7 +57,7 @@ func (o *DeepSeek) Query(systemPrompt, userPrompt string) (DeepSeekResponse, err
 				Role:    "user",
 			},
 		},
-		Model: DeepSeekModelName,
+		Model: o.modelName,
 	}
 	// Marshal the body
 	body, err := json.Marshal(payload)

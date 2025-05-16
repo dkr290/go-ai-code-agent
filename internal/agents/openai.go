@@ -12,7 +12,6 @@ import (
 
 const (
 	OpenAIEndpoint = "https://api.openai.com/v1/chat/completions"
-	OpenAIModel    = "gpt-4o-mini"
 )
 
 // Response that holds the result
@@ -21,9 +20,10 @@ type OpenAI struct {
 	httpClient *http.Client
 	ctx        context.Context
 	apiKey     string
+	model      string
 }
 
-func NewOpenAI(ctx context.Context, apiKey string, httpClient *http.Client) *OpenAI {
+func NewOpenAI(ctx context.Context, apiKey string, httpClient *http.Client, model string) *OpenAI {
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: time.Second * 120,
@@ -34,6 +34,7 @@ func NewOpenAI(ctx context.Context, apiKey string, httpClient *http.Client) *Ope
 		ctx:        ctx,
 		apiKey:     apiKey,
 		httpClient: httpClient,
+		model:      model,
 	}
 }
 
@@ -42,7 +43,7 @@ func (o *OpenAI) Query(systemPrompt, userPrompt string) (OpenAIResponse, error) 
 		systemPrompt = "You are helpful assistant."
 	}
 	payload := OpenAIRequest{
-		Model: OpenAIModel,
+		Model: o.model,
 		Messages: []Message{
 			{
 				Role:    "system",

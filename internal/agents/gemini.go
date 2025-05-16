@@ -7,19 +7,17 @@ import (
 	"google.golang.org/genai"
 )
 
-const (
-	GenAiModelName = "gemini-2.0-flash"
-)
-
 type GeminiApi struct {
 	ctx    context.Context
 	apiKey string
+	model  string
 }
 
-func NewGemini(ctx context.Context, apiKey string) *GeminiApi {
+func NewGemini(ctx context.Context, apiKey string, model string) *GeminiApi {
 	return &GeminiApi{
 		ctx:    ctx,
 		apiKey: apiKey,
+		model:  model,
 	}
 }
 
@@ -36,7 +34,7 @@ func (g *GeminiApi) QueryGemini(systemPrompt, userPrompt string) (string, error)
 		return "", fmt.Errorf("error creating new genai agent %v", err)
 	}
 
-	result, err := client.Models.GenerateContent(g.ctx, GenAiModelName,
+	result, err := client.Models.GenerateContent(g.ctx, g.model,
 		genai.Text(userPrompt),
 		&genai.GenerateContentConfig{
 			SystemInstruction: &genai.Content{
