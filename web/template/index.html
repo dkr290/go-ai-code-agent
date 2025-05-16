@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Code Generator</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        color: #343a40;
+      }
+      .navbar {
+        background-color: #007bff;
+        padding: 0.5rem 1rem;
+      }
+      .navbar-brand {
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+      .navbar-nav .nav-link {
+        color: #ffffff;
+        padding: 0.25rem 0.75rem;
+      }
+      .navbar-nav .nav-item.dropdown:hover .dropdown-menu {
+        display: block;
+      }
+      .dropdown-menu {
+        background-color: #007bff;
+        border: none;
+      }
+      .dropdown-item {
+        color: #ffffff;
+      }
+      .dropdown-item:hover,
+      .dropdown-item.active {
+        background-color: #0056b3;
+      }
+      .form-label {
+        font-weight: bold;
+        margin-top: 1rem;
+      }
+      .btn-primary {
+        background-color: #28a745;
+        border-color: #28a745;
+      }
+      .btn-primary:hover {
+        background-color: #1e7e34;
+        border-color: #1c7430;
+      }
+      #ai_response {
+        margin-top: 2rem;
+        padding: 1rem;
+        background-color: #e9ecef;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">AI Code Generator</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="llmDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                LLM
+              </a>
+              <ul
+                class="dropdown-menu"
+                aria-labelledby="llmDropdown"
+                id="llmMenu"
+              >
+                <li>
+                  <a class="dropdown-item" href="#" data-llm="openai">OpenAI</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="#" data-llm="deepseek"
+                    >DeepSeek</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="#" data-llm="gemini">Gemini</a>
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Other Options</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <div id="modelDropdownContainer">
+        <div class="mb-3">
+          <label for="model" class="form-label">Model:</label>
+          <select class="form-select" id="model" name="model" disabled>
+            <option value="">Select an LLM first</option>
+          </select>
+        </div>
+      </div>
+
+      <form id="aiForm" action="/call_agent" method="post">
+        <div class="mb-3">
+          <label for="use-llm-hidden" class="form-label">Selected LLM:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="use-llm-hidden"
+            name="use-llm"
+            readonly
+          />
+          <small class="form-text text-muted"
+            >Select an LLM from the menu above.</small
+          >
+        </div>
+        <div class="mb-3">
+          <label for="output-dir" class="form-label">Output Directory:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="output-dir"
+            name="output-dir"
+            value="./output"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="base-package" class="form-label"
+            >Base Package(optional):</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="base-package"
+            name="base-package"
+            value="github.com/user/package"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="use-language" class="form-label">Language:</label>
+          <select class="form-select" id="use-language" name="use-language">
+            <option value="go" selected>Go</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="use-template" class="form-label"
+            >Template (optional):</label
+          >
+          <select class="form-select" id="use-template" name="use-template">
+            <option value="">None</option>
+            <option value="go-gin">go-gin</option>
+            <option value="java-spring">java-spring</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="user-prompt" class="form-label">User Prompt:</label>
+          <textarea
+            class="form-control"
+            id="user-prompt"
+            name="user-prompt"
+            rows="3"
+          >
+sample todo app</textarea
+          >
+        </div>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          disabled
+          id="submitButton"
+        >
+          Generate Code
+        </button>
+      </form>
+
+      <div id="ai_response"></div>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      // 1) Map of LLM → models
+      const llmModels = {
+        openai: [
+          { value: "gpt-4", label: "GPT-4" },
+          { value: "gpt-4o", label: "GPT-4o" },
+          { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
+        ],
+        deepseek: [
+          { value: "ds-alpha", label: "DS-Alpha" },
+          { value: "ds-beta", label: "DS-Beta" },
+        ],
+        gemini: [
+          { value: "gemini-pro", label: "Gemini Pro" },
+          { value: "gemini-ultra", label: "Gemini Ultra" },
+        ],
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const llmItems = document.querySelectorAll("#llmMenu .dropdown-item");
+        const modelSel = document.getElementById("model");
+        const llmHidden = document.getElementById("use-llm-hidden");
+        const submitBtn = document.getElementById("submitButton");
+
+        // When an LLM is clicked
+        llmItems.forEach((item) => {
+          item.addEventListener("click", (evt) => {
+            evt.preventDefault();
+
+            // highlight active
+            llmItems.forEach((i) => i.classList.remove("active"));
+            item.classList.add("active");
+
+            // get key and set hidden input
+            const key = item.dataset.llm;
+            llmHidden.value = key;
+
+            // rebuild models dropdown
+            modelSel.innerHTML = "";
+            llmModels[key].forEach((m) => {
+              const opt = document.createElement("option");
+              opt.value = m.value;
+              opt.textContent = m.label;
+              opt.dataset.llm = key;
+              modelSel.appendChild(opt);
+            });
+
+            // enable and update button state
+            modelSel.disabled = false;
+            submitBtn.disabled = modelSel.value === "";
+          });
+        });
+
+        // enable submit when model changes
+        modelSel.addEventListener("change", () => {
+          submitBtn.disabled = modelSel.value === "";
+        });
+      });
+    </script>
+  </body>
+</html>
