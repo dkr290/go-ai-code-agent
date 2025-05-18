@@ -36,7 +36,7 @@ func NewAppHandler(tmpl *template.Template) *AppHandler {
 // IndexHandler handles the root path and renders the index.html template
 func (h *AppHandler) IndexHandler(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == http.MethodGet {
-		err := h.templates.ExecuteTemplate(w, "index.html", nil) // You might pass data here
+		err := h.templates.ExecuteTemplate(w, "base.html", nil) // You might pass data here
 		if err != nil {
 			return fmt.Errorf("erro partsing templates %v", err)
 		}

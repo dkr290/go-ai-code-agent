@@ -1,14 +1,17 @@
 package utils
 
 import (
-	"encoding/json"
+	"log"
 	"log/slog"
 	"net/http"
 	"strings"
+
+	"github.com/dkr290/go-ai-code-agent/internal/templates"
 )
 
 type ErrorResponse struct {
-	Message string `json:"message"`
+	Message    string `json:"message"`
+	StatusCode int    `json:"statuscode"`
 }
 
 func MakeHandlers(
@@ -34,14 +37,34 @@ func MakeHandlers(
 
 			default:
 				statusCode = http.StatusInternalServerError
-				message = "Internal Server Error"
+				message = "Internal Server Error" + err.Error()
 			}
 
-			w.Header().Set("Content-Type", "application/json") // Set content type to JSON
-			w.WriteHeader(statusCode)
-			if err := json.NewEncoder(w).Encode(ErrorResponse{Message: message}); err != nil {
-				slog.Error("Error encoding message", "err", err)
-			}
+			RenderError(w, statusCode, message)
 		}
+	}
+}
+
+func RenderError(w http.ResponseWriter, status int, message string) {
+	tmpl, err := templates.LoadTemplates("web/template/*.html")
+	if err != nil {
+		log.Fatalf("Error loading templates: %v", err)
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+
+	data := struct {
+		Flash ErrorResponse
+	}{
+		Flash: ErrorResponse{
+			Message:    message,
+			StatusCode: status,
+		},
+	}
+
+	if err := tmpl.ExecuteTemplate(w, "base.html", data); err != nil {
+		slog.Error("Failed to render error template", "err", err)
+		http.Error(w, message, status)
 	}
 }
